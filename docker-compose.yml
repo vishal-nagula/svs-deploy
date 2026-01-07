@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: appdb # Extracted from the JDBC URL path
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - svs-network
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      # Database Config
+      DB_URL: jdbc:postgresql://postgres:5432/appdb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Mail Config
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      
+      # Security & JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL}
+      
+      # Server & App
+      SERVER_PORT: 8080 # Internal port
+      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH}
+      AGENT_DUMMY_PASSWORD_ENABLED: ${AGENT_DUMMY_PASSWORD_ENABLED}
+      AGENT_DUMMY_PASSWORD_VALUE: ${AGENT_DUMMY_PASSWORD_VALUE}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES}
+      OTP_HARDCODED: ${OTP_HARDCODED}
+      OTP_HARDCODED_VALUE: ${OTP_HARDCODED_VALUE}
+    networks:
+      - svs-network
+
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    restart: always
+    environment:
+      REACT_APP_API_URL: /api
+    networks:
+      - svs-network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./configs/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # Mount Let's Encrypt certificates from host
+      - /etc/letsencrypt/live/makemydummytrip.com/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
+      - /etc/letsencrypt/live/makemydummytrip.com/privkey.pem:/etc/nginx/certs/privkey.pem:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - svs-network
+
+networks:
+  svs-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
