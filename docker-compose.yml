@@ -48,27 +48,14 @@ services:
   frontend:
     image: ${FRONTEND_IMAGE}
     restart: always
+    ports:
+      - "80:80"
+      - "443:443"
     environment:
       REACT_APP_API_URL: ""
     volumes:
       # Frontend image requires certs internally
       - /home/svs-admin/svs-deploy/certs:/etc/nginx/certs:ro
-    networks:
-      - svs-network
-
-  nginx:
-    image: nginx:alpine
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./configs/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      # Mount certificates from absolute host path as requested
-      - /home/svs-admin/svs-deploy/certs:/etc/nginx/certs:ro
-    depends_on:
-      - frontend
-      - backend
     networks:
       - svs-network
 
