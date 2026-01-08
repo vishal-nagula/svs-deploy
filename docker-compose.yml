@@ -50,6 +50,9 @@ services:
     restart: always
     environment:
       REACT_APP_API_URL: /api
+    volumes:
+      # Frontend image requires certs internally
+      - /home/svs-admin/svs-deploy/certs:/etc/nginx/certs:ro
     networks:
       - svs-network
 
