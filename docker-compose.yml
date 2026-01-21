@@ -28,6 +28,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_FROM: ${MAIL_FROM}
+      POSTMARK_TOKEN: ${POSTMARK_TOKEN}
       
       # Security & JWT
       JWT_SECRET: ${JWT_SECRET}
